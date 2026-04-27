@@ -1,0 +1,46 @@
+# ============================================================
+# FLEETCONTROL — COMANDOS PARA SUBIR NO RAILWAY
+# Cole cada bloco no CMD (Prompt de Comando) do Windows
+# ============================================================
+
+# ── PASSO 1: Entrar na pasta do projeto ──
+cd %USERPROFILE%\Downloads\fleetcontrol
+
+# ── PASSO 2: Iniciar repositório Git ──
+git init
+git add .
+git commit -m "FleetControl v1.0 - Sistema de Gestão de Frota"
+
+# ── PASSO 3: Criar repositório no GitHub ──
+# Acesse: https://github.com/new
+# - Nome: fleetcontrol
+# - Deixe PRIVADO (Private)
+# - NÃO marque nenhuma opção extra
+# - Clique em "Create repository"
+# Copie a URL que aparecer (ex: https://github.com/SEU_USUARIO/fleetcontrol.git)
+
+# ── PASSO 4: Conectar e enviar para o GitHub ──
+git remote add origin https://github.com/SEU_USUARIO/fleetcontrol.git
+git branch -M main
+git push -u origin main
+
+# ── PASSO 5: Subir no Railway ──
+# 1. Acesse: https://railway.app
+# 2. Clique em "New Project"
+# 3. Selecione "Deploy from GitHub repo"
+# 4. Escolha o repositório "fleetcontrol"
+# 5. Clique em "Deploy Now"
+
+# ── PASSO 6: Adicionar banco de dados PostgreSQL ──
+# No Railway, dentro do seu projeto:
+# 1. Clique em "+ New"
+# 2. Selecione "Database" → "PostgreSQL"
+# 3. O Railway conecta automaticamente!
+
+# ── PASSO 7: Pegar a URL do sistema ──
+# No Railway, clique no serviço fleetcontrol
+# Vá em "Settings" → "Domains" → "Generate Domain"
+# Sua URL será algo como: fleetcontrol-production.up.railway.app
+# ============================================================
+# Pronto! Acesse pelo navegador e comece a usar!
+# ============================================================
