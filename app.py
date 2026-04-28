@@ -189,6 +189,12 @@ def update_veiculo(vid):
 @app.route('/api/veiculos/<int:vid>', methods=['DELETE'])
 def delete_veiculo(vid):
     v = Veiculo.query.get_or_404(vid)
+    # Remove registros vinculados antes de deletar o veículo
+    Abastecimento.query.filter_by(veiculo_id=vid).delete()
+    Manutencao.query.filter_by(veiculo_id=vid).delete()
+    DocumentoVeiculo.query.filter_by(veiculo_id=vid).delete()
+    # Diárias: apenas remove o vínculo com o veículo
+    Diaria.query.filter_by(veiculo_id=vid).update({'veiculo_id': None})
     db.session.delete(v)
     db.session.commit()
     return jsonify({'ok': True})
@@ -348,6 +354,8 @@ def update_equipe(eid):
 @app.route('/api/equipes/<int:eid>', methods=['DELETE'])
 def delete_equipe(eid):
     e = Equipe.query.get_or_404(eid)
+    # Remove diárias vinculadas antes de deletar a equipe
+    Diaria.query.filter_by(equipe_id=eid).delete()
     db.session.delete(e)
     db.session.commit()
     return jsonify({'ok': True})
