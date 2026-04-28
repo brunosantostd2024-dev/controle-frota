@@ -275,6 +275,7 @@ tbody tr:hover td{background:var(--bg3)}
 <div class="toast" id="toast"></div>
 
 <script>
+{% raw %}
 const ICONS={carro:'🚗',caminhonete:'🛻',caminhao:'🚛',moto:'🏍️',van:'🚐'};
 const COMB_CLR={gasolina:'#3d8ef0',etanol:'#22c98a',diesel:'#f0a832',flex:'#a78bfa',gnv:'#6b7280'};
 const BAR_CLR=['#3d8ef0','#22c98a','#f0a832','#a78bfa','#ef5350','#34d399'];
@@ -533,6 +534,7 @@ function updateClock(){
 setInterval(updateClock,1000); updateClock();
 loadAll();
 setInterval(loadAll, 60000);
+{% endraw %}
 </script>
 </body>
 </html>
