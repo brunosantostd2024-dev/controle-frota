@@ -64,6 +64,52 @@ class Abastecimento(db.Model):
             'criado_em': self.criado_em.isoformat()
         }
 
+class Manutencao(db.Model):
+    __tablename__ = 'manutencoes'
+    id           = db.Column(db.Integer, primary_key=True)
+    veiculo_id   = db.Column(db.Integer, db.ForeignKey('veiculos.id'), nullable=False)
+    tipo         = db.Column(db.String(100), nullable=False)   # ex: troca de óleo, revisão
+    descricao    = db.Column(db.String(500))
+    data         = db.Column(db.String(20))                    # data realizada
+    km           = db.Column(db.Float)                         # km na realização
+    custo        = db.Column(db.Float, default=0)
+    oficina      = db.Column(db.String(200))
+    # Agendamento
+    proxima_data = db.Column(db.String(20))                    # próxima data prevista
+    proxima_km   = db.Column(db.Float)                         # próximo km previsto
+    status       = db.Column(db.String(20), default='realizada')  # realizada | agendada
+    criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id, 'veiculo_id': self.veiculo_id,
+            'tipo': self.tipo, 'descricao': self.descricao,
+            'data': self.data, 'km': self.km, 'custo': self.custo,
+            'oficina': self.oficina, 'proxima_data': self.proxima_data,
+            'proxima_km': self.proxima_km, 'status': self.status,
+            'criado_em': self.criado_em.isoformat()
+        }
+
+class DocumentoVeiculo(db.Model):
+    __tablename__ = 'documentos'
+    id           = db.Column(db.Integer, primary_key=True)
+    veiculo_id   = db.Column(db.Integer, db.ForeignKey('veiculos.id'), nullable=False)
+    tipo         = db.Column(db.String(50), nullable=False)    # ipva | seguro | licenciamento | cnh
+    vencimento   = db.Column(db.String(20), nullable=False)
+    valor        = db.Column(db.Float, default=0)
+    pago         = db.Column(db.Boolean, default=False)
+    observacao   = db.Column(db.String(300))
+    criado_em    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id, 'veiculo_id': self.veiculo_id,
+            'tipo': self.tipo, 'vencimento': self.vencimento,
+            'valor': self.valor, 'pago': self.pago,
+            'observacao': self.observacao,
+            'criado_em': self.criado_em.isoformat()
+        }
+
 # ── ROUTES ──
 @app.route('/')
 def index():
@@ -127,7 +173,6 @@ def add_abastecimento():
     )
     db.session.add(a)
 
-    # Atualiza hodômetro do veículo
     v = Veiculo.query.get(int(d['veiculo_id']))
     if v and km > v.km:
         v.km = km
@@ -139,6 +184,78 @@ def add_abastecimento():
 def delete_abastecimento(aid):
     a = Abastecimento.query.get_or_404(aid)
     db.session.delete(a)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+# ── MANUTENÇÕES ──
+@app.route('/api/manutencoes', methods=['GET'])
+def get_manutencoes():
+    vid = request.args.get('veiculo_id')
+    q = Manutencao.query
+    if vid:
+        q = q.filter_by(veiculo_id=int(vid))
+    return jsonify([m.to_dict() for m in q.order_by(Manutencao.data.desc()).all()])
+
+@app.route('/api/manutencoes', methods=['POST'])
+def add_manutencao():
+    d = request.json
+    m = Manutencao(
+        veiculo_id=int(d['veiculo_id']),
+        tipo=d.get('tipo',''),
+        descricao=d.get('descricao',''),
+        data=d.get('data',''),
+        km=float(d.get('km',0)) if d.get('km') else None,
+        custo=float(d.get('custo',0)),
+        oficina=d.get('oficina',''),
+        proxima_data=d.get('proxima_data',''),
+        proxima_km=float(d.get('proxima_km',0)) if d.get('proxima_km') else None,
+        status=d.get('status','realizada')
+    )
+    db.session.add(m)
+    db.session.commit()
+    return jsonify(m.to_dict()), 201
+
+@app.route('/api/manutencoes/<int:mid>', methods=['DELETE'])
+def delete_manutencao(mid):
+    m = Manutencao.query.get_or_404(mid)
+    db.session.delete(m)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+# ── DOCUMENTOS (IPVA, SEGURO etc) ──
+@app.route('/api/documentos', methods=['GET'])
+def get_documentos():
+    return jsonify([doc.to_dict() for doc in DocumentoVeiculo.query.order_by(DocumentoVeiculo.vencimento).all()])
+
+@app.route('/api/documentos', methods=['POST'])
+def add_documento():
+    d = request.json
+    doc = DocumentoVeiculo(
+        veiculo_id=int(d['veiculo_id']),
+        tipo=d.get('tipo','ipva'),
+        vencimento=d.get('vencimento',''),
+        valor=float(d.get('valor',0)),
+        pago=bool(d.get('pago', False)),
+        observacao=d.get('observacao','')
+    )
+    db.session.add(doc)
+    db.session.commit()
+    return jsonify(doc.to_dict()), 201
+
+@app.route('/api/documentos/<int:did>', methods=['PUT'])
+def update_documento(did):
+    doc = DocumentoVeiculo.query.get_or_404(did)
+    d = request.json
+    for field in ['tipo','vencimento','valor','pago','observacao']:
+        if field in d:
+            setattr(doc, field, d[field])
+    db.session.commit()
+    return jsonify(doc.to_dict())
+
+@app.route('/api/documentos/<int:did>', methods=['DELETE'])
+def delete_documento(did):
+    doc = DocumentoVeiculo.query.get_or_404(did)
+    db.session.delete(doc)
     db.session.commit()
     return jsonify({'ok': True})
 
