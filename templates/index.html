@@ -161,11 +161,41 @@ tbody tr:hover td{background:var(--bg3)}
 .toast.err{border-left:3px solid var(--red)}
 .section-title{font-size:13px;font-weight:600;color:var(--text2);margin:20px 0 12px;display:flex;align-items:center;gap:8px}
 .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.hamburger{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:8px;border-radius:var(--radius-sm);}
+.hamburger svg{width:22px;height:22px;fill:currentColor;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:49;backdrop-filter:blur(2px);}
+.sidebar-overlay.open{display:block;}
+@media(max-width:768px){
+  .hamburger{display:flex;align-items:center;justify-content:center;}
+  .sidebar{position:fixed;left:-240px;top:0;bottom:0;z-index:50;width:240px;transition:left .25s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,.4);}
+  .sidebar.open{left:0;}
+  .shell{flex-direction:column;}
+  .main{width:100%;min-width:0;}
+  .topbar{padding:0 14px;height:52px;}
+  .topbar-title{font-size:14px;}
+  .topbar-sub{display:none;}
+  .topbar-actions .btn:not(#btn-atualizar):not(.btn-accent){display:none;}
+  .content{padding:14px 12px;}
+  .kpi-row{grid-template-columns:1fr 1fr!important;}
+  .grid-2,.grid-2-1{grid-template-columns:1fr!important;}
+  .tbl-wrap{margin:0 -12px;padding:0 12px;}
+  table{min-width:520px;}
+  .modal{width:95vw;padding:18px;}
+  .form-grid{grid-template-columns:1fr!important;}
+  .form-group.full{grid-column:1!important;}
+  .bar-chart{height:110px;}
+  .diarias-kpis{grid-template-columns:1fr 1fr!important;}
+}
+@media(max-width:400px){
+  .kpi-row{grid-template-columns:1fr!important;}
+  .kpi-value{font-size:20px;}
+}
 </style>
 </head>
 <body>
 <div class="shell">
-  <nav class="sidebar">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg></div>
       <div><div class="logo-name">FleetControl</div><div class="logo-sub">Gestão de Frota</div></div>
@@ -182,6 +212,12 @@ tbody tr:hover td{background:var(--bg3)}
       <button class="nav-item" onclick="gotoPage('manutencao',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>Manutenção<span id="badge-manut" style="margin-left:auto;background:var(--amber);color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;display:none;"></span></button>
       <button class="nav-item" onclick="gotoPage('documentos',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>Documentos / IPVA<span id="badge-doc" style="margin-left:auto;background:var(--red);color:white;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;display:none;"></span></button>
       <button class="nav-item" onclick="gotoPage('relatorios',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>Relatórios</button>
+      <button class="nav-item" onclick="gotoPage('equipes',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Equipes</button>
+      <button class="nav-item" onclick="gotoPage('diarias',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.06 15.96 0 13.5 0A5.5 5.5 0 0 0 9 2.73 5.5 5.5 0 0 0 4.5 0C2.04 0 0 2.06 0 4.66c0 .46.11.9.18 1.34H0v2h20V6zm-9.5-4c1.38 0 2.5 1.12 2.5 2.5S11.88 7 10.5 7 8 5.88 8 4.5 9.12 2 10.5 2zm-6 0C5.88 2 7 3.12 7 4.5S5.88 7 4.5 7 2 5.88 2 4.5 3.12 2 4.5 2zM0 20h20v2H0v-2zm20-10H0v8h20v-8z"/></svg>Diárias</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Análises</div>
+      <button class="nav-item" onclick="gotoPage('dash-diarias',this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>Dashboard Diárias</button>
     </div>
     <div class="sidebar-footer">
       <strong id="clock"></strong><span id="today-date"></span>
@@ -191,9 +227,14 @@ tbody tr:hover td{background:var(--bg3)}
 
   <div class="main">
     <div class="topbar">
-      <div><div class="topbar-title" id="page-title">Dashboard</div><div class="topbar-sub" id="page-sub">Visão geral da frota</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <div><div class="topbar-title" id="page-title">Dashboard</div><div class="topbar-sub" id="page-sub">Visão geral da frota</div></div>
+      </div>
       <div class="topbar-actions">
-        <button class="btn" onclick="loadAll()"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>Atualizar</button>
+        <button id="btn-atualizar" class="btn" onclick="loadAll(true)"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>Atualizar</button>
         <button class="btn" onclick="openModal('abast')">+ Abastecer</button>
         <button class="btn btn-accent" onclick="openModal('veiculo')">+ Veículo</button>
       </div>
@@ -261,6 +302,81 @@ tbody tr:hover td{background:var(--bg3)}
         <div class="card" style="margin-top:16px;"><div class="card-header"><span class="card-title">Status geral da frota</span></div>
         <div class="tbl-wrap"><table><thead><tr><th>Veículo</th><th>Placa</th><th>km/L real</th><th>km/L esperado</th><th>Variação</th><th>Status</th></tr></thead><tbody id="alertas-tbody"></tbody></table></div></div>
       </div>
+
+      <!-- EQUIPES -->
+      <div id="page-equipes" class="page">
+        <div class="topbar-actions" style="margin-bottom:16px;justify-content:flex-end;display:flex;">
+          <button class="btn btn-accent" onclick="openModal('equipe')">+ Nova Equipe</button>
+        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Equipes cadastradas</span></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>Descrição</th><th>Status</th><th>Diárias</th><th>Total diárias</th><th></th></tr></thead><tbody id="equipes-tbody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- DIÁRIAS -->
+      <div id="page-diarias" class="page">
+        <div class="topbar-actions" style="margin-bottom:16px;justify-content:flex-end;display:flex;gap:8px;">
+          <select class="form-input" id="diaria-filtro-equipe" style="width:200px;" onchange="renderDiarias()"><option value="">Todas as equipes</option></select>
+          <select class="form-input" id="diaria-filtro-status" style="width:160px;" onchange="renderDiarias()">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="pago">Pago</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <button class="btn btn-accent" onclick="openModal('diaria')">+ Nova Diária</button>
+        </div>
+        <div id="diarias-kpis" class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;"></div>
+        <div class="card"><div class="card-header"><span class="card-title">Registro de diárias</span></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Colaborador</th><th>Equipe</th><th>Destino</th><th>Período</th><th>Dias</th><th>Valor/dia</th><th>Total</th><th>Veículo</th><th>Status</th><th></th></tr></thead><tbody id="diarias-tbody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- DASHBOARD DIÁRIAS -->
+      <div id="page-dash-diarias" class="page">
+        <div id="dashd-kpis" class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;"></div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          <div class="card"><div class="card-header"><span class="card-title">Custo por equipe</span></div><div id="dashd-equipe-chart" class="bar-chart"></div><div class="bar-axis"></div><div id="dashd-equipe-labels" style="display:flex;gap:8px;margin-top:6px;"></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">Distribuição por status</span></div><div id="dashd-status-list"></div></div>
+        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Ranking de diárias por equipe</span></div><div id="dashd-ranking"></div></div>
+        <div class="card" style="margin-top:14px;"><div class="card-header"><span class="card-title">Diárias recentes</span></div>
+          <div class="tbl-wrap"><table><thead><tr><th>Colaborador</th><th>Equipe</th><th>Destino</th><th>Período</th><th>Total</th><th>Status</th></tr></thead><tbody id="dashd-tbody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EQUIPE -->
+<div class="modal-overlay" id="modal-equipe">
+  <div class="modal">
+    <div class="modal-title">Cadastrar equipe <button class="modal-close" onclick="closeModal('equipe')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group full"><label class="form-label">Nome da equipe *</label><input id="eq-nome" class="form-input" placeholder="Ex: Equipe Norte"></div>
+      <div class="form-group full"><label class="form-label">Descrição</label><input id="eq-desc" class="form-input" placeholder="Descrição opcional"></div>
+      <div class="form-group"><label class="form-label">Status</label><select id="eq-ativa" class="form-input"><option value="true">Ativa</option><option value="false">Inativa</option></select></div>
+      <div class="form-footer"><button class="btn" onclick="closeModal('equipe')">Cancelar</button><button class="btn btn-accent" onclick="salvarEquipe()">Salvar equipe</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DIÁRIA -->
+<div class="modal-overlay" id="modal-diaria">
+  <div class="modal">
+    <div class="modal-title">Registrar diária <button class="modal-close" onclick="closeModal('diaria')">✕</button></div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Colaborador *</label><input id="di-colab" class="form-input" placeholder="Nome do colaborador"></div>
+      <div class="form-group"><label class="form-label">Equipe *</label><select id="di-equipe" class="form-input"></select></div>
+      <div class="form-group"><label class="form-label">Data início *</label><input id="di-inicio" class="form-input" type="date"></div>
+      <div class="form-group"><label class="form-label">Data fim *</label><input id="di-fim" class="form-input" type="date"></div>
+      <div class="form-group"><label class="form-label">Qtd. dias</label><input id="di-dias" class="form-input" type="number" step="0.5" min="0.5" placeholder="1"></div>
+      <div class="form-group"><label class="form-label">Valor por dia (R$)</label><input id="di-vdia" class="form-input" type="number" step="0.01" min="0" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Destino</label><input id="di-dest" class="form-input" placeholder="Cidade / local"></div>
+      <div class="form-group"><label class="form-label">Veículo (opcional)</label><select id="di-veiculo" class="form-input"><option value="">Sem veículo</option></select></div>
+      <div class="form-group full"><label class="form-label">Motivo / Observação</label><input id="di-motivo" class="form-input" placeholder="Motivo da viagem"></div>
+      <div class="form-group"><label class="form-label">Status</label><select id="di-status" class="form-input"><option value="pendente">Pendente</option><option value="aprovado">Aprovado</option><option value="pago">Pago</option><option value="cancelado">Cancelado</option></select></div>
+      <div class="form-footer"><button class="btn" onclick="closeModal('diaria')">Cancelar</button><button class="btn btn-accent" onclick="salvarDiaria()">Salvar diária</button></div>
     </div>
   </div>
 </div>
@@ -347,7 +463,7 @@ const ICONS={carro:'🚗',caminhonete:'🛻',caminhao:'🚛',moto:'🏍️',van:
 const COMB_CLR={gasolina:'#3d8ef0',etanol:'#22c98a',diesel:'#f0a832',flex:'#a78bfa',gnv:'#6b7280'};
 const BAR_CLR=['#3d8ef0','#22c98a','#f0a832','#a78bfa','#ef5350','#34d399'];
 const DOC_LABEL={ipva:'IPVA',seguro:'Seguro',licenciamento:'Licenciamento',revisao:'Revisão',cnh:'CNH',outro:'Outro'};
-let veiculos=[], abastecimentos=[], manutencoes=[], documentos=[];
+let veiculos=[], abastecimentos=[], manutencoes=[], documentos=[], equipes=[], diarias=[];
 
 async function api(path, method='GET', body=null) {
   const opts={method,headers:{'Content-Type':'application/json'}};
@@ -363,18 +479,31 @@ function toast(msg, ok=true) {
   setTimeout(()=>t.className='toast',3000);
 }
 
-async function loadAll() {
+async function loadAll(isManual=false) {
+  const btn=document.getElementById('btn-atualizar');
+  if(btn){ btn.disabled=true; btn.style.opacity='.6'; }
   try {
-    [veiculos, abastecimentos, manutencoes, documentos] = await Promise.all([
-      api('/veiculos'), api('/abastecimentos'), api('/manutencoes'), api('/documentos')
+    [veiculos, abastecimentos, manutencoes, documentos, equipes, diarias] = await Promise.all([
+      api('/veiculos'), api('/abastecimentos'), api('/manutencoes'), api('/documentos'),
+      api('/equipes'), api('/diarias')
     ]);
+    // Só mostra loading na primeira carga (dash-load visível)
+    const dashLoad=document.getElementById('dash-load');
+    if(dashLoad && dashLoad.style.display!=='none'){
+      dashLoad.style.display='none';
+      document.getElementById('dash-main').style.display='block';
+    }
     renderCurrentPage();
     document.getElementById('sync-dot').className='sync-dot';
     document.getElementById('sync-label').textContent='Atualizado agora';
     updateBadges();
+    if(isManual) toast('Dados atualizados!');
   } catch(e) {
     document.getElementById('sync-dot').className='sync-dot err';
     document.getElementById('sync-label').textContent='Erro de conexão';
+    if(isManual) toast('Erro ao atualizar dados.',false);
+  } finally {
+    if(btn){ btn.disabled=false; btn.style.opacity=''; }
   }
 }
 
@@ -430,7 +559,16 @@ function updateBadges(){
   if(cntDoc>0){bd.textContent=cntDoc;bd.style.display='inline';}else{bd.style.display='none';}
 }
 
-const PAGE_META={dashboard:['Dashboard','Visão geral'],veiculos:['Veículos','Gestão da frota'],abastecimento:['Abastecimentos','Histórico'],relatorios:['Relatórios','Análises'],alertas:['Alertas','Monitoramento'],manutencao:['Manutenção','Agendamentos e histórico'],documentos:['Documentos / IPVA','Controle de vencimentos']};
+const PAGE_META={dashboard:['Dashboard','Visão geral'],veiculos:['Veículos','Gestão da frota'],abastecimento:['Abastecimentos','Histórico'],relatorios:['Relatórios','Análises'],alertas:['Alertas','Monitoramento'],manutencao:['Manutenção','Agendamentos e histórico'],documentos:['Documentos / IPVA','Controle de vencimentos'],equipes:['Equipes','Gestão de equipes'],diarias:['Diárias','Registro de diárias'],['dash-diarias']:['Dashboard Diárias','Análise por equipe']};
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
 let currentPage='dashboard';
 function gotoPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -441,6 +579,7 @@ function gotoPage(name,btn){
   document.getElementById('page-title').textContent=t;
   document.getElementById('page-sub').textContent=s;
   currentPage=name; renderCurrentPage();
+  closeSidebar();
 }
 function renderCurrentPage(){renderPage(currentPage);}
 function renderPage(n){
@@ -451,6 +590,9 @@ function renderPage(n){
   if(n==='alertas') renderAlertas();
   if(n==='manutencao') renderManutencao();
   if(n==='documentos') renderDocumentos();
+  if(n==='equipes') renderEquipes();
+  if(n==='diarias') renderDiarias();
+  if(n==='dash-diarias') renderDashDiarias();
 }
 
 function populateVeiculoSelect(id){
@@ -461,6 +603,15 @@ function openModal(name){
   if(name==='abast'){ populateVeiculoSelect('a-veiculo'); document.getElementById('a-data').value=new Date().toISOString().slice(0,10); }
   if(name==='manut'){ populateVeiculoSelect('m-veiculo'); document.getElementById('m-data').value=new Date().toISOString().slice(0,10); }
   if(name==='doc')  { populateVeiculoSelect('d-veiculo'); }
+  if(name==='equipe'){ ['eq-nome','eq-desc'].forEach(id=>document.getElementById(id).value=''); }
+  if(name==='diaria'){
+    const today=new Date().toISOString().slice(0,10);
+    document.getElementById('di-inicio').value=today;
+    document.getElementById('di-fim').value=today;
+    document.getElementById('di-equipe').innerHTML=equipes.map(e=>`<option value="${e.id}">${e.nome}</option>`).join('');
+    document.getElementById('di-veiculo').innerHTML='<option value="">Sem veículo</option>'+veiculos.map(v=>`<option value="${v.id}">${v.nome} — ${v.placa}</option>`).join('');
+    ['di-colab','di-dias','di-vdia','di-dest','di-motivo'].forEach(id=>document.getElementById(id).value='');
+  }
   document.getElementById('modal-'+name).classList.add('open');
 }
 function closeModal(name){document.getElementById('modal-'+name).classList.remove('open');}
@@ -570,8 +721,155 @@ async function togglePago(id, pago){
   toast((!pago)?'Marcado como pago!':'Marcado como em aberto.');
 }
 
+async function salvarEquipe(){
+  const nome=document.getElementById('eq-nome').value.trim();
+  if(!nome){toast('Preencha o nome.',false);return;}
+  try{
+    const e=await api('/equipes','POST',{nome,descricao:document.getElementById('eq-desc').value,ativa:document.getElementById('eq-ativa').value==='true'});
+    equipes.push(e); closeModal('equipe'); renderCurrentPage(); toast('Equipe cadastrada!');
+  }catch(err){toast('Erro: '+err.message,false);}
+}
+async function delEquipe(id){
+  if(!confirm('Excluir equipe?')) return;
+  await api('/equipes/'+id,'DELETE');
+  equipes=equipes.filter(e=>e.id!==id);
+  renderCurrentPage(); toast('Equipe removida.');
+}
+
+async function salvarDiaria(){
+  const colab=document.getElementById('di-colab').value.trim();
+  const equipe_id=document.getElementById('di-equipe').value;
+  const inicio=document.getElementById('di-inicio').value;
+  const fim=document.getElementById('di-fim').value;
+  if(!colab||!equipe_id||!inicio||!fim){toast('Preencha colaborador, equipe e período.',false);return;}
+  const qtd=parseFloat(document.getElementById('di-dias').value)||1;
+  const vdia=parseFloat(document.getElementById('di-vdia').value)||0;
+  const vid=document.getElementById('di-veiculo').value||null;
+  try{
+    const d=await api('/diarias','POST',{colaborador:colab,equipe_id,veiculo_id:vid||null,data_inicio:inicio,data_fim:fim,qtd_dias:qtd,valor_dia:vdia,destino:document.getElementById('di-dest').value,motivo:document.getElementById('di-motivo').value,status:document.getElementById('di-status').value});
+    diarias.unshift(d); closeModal('diaria'); renderCurrentPage(); toast('Diária registrada!');
+  }catch(err){toast('Erro: '+err.message,false);}
+}
+async function delDiaria(id){
+  if(!confirm('Excluir diária?')) return;
+  await api('/diarias/'+id,'DELETE');
+  diarias=diarias.filter(d=>d.id!==id);
+  renderCurrentPage(); toast('Diária removida.');
+}
+async function mudaStatusDiaria(id, status){
+  await api('/diarias/'+id,'PUT',{status});
+  const d=diarias.find(d=>d.id==id);
+  if(d) d.status=status;
+  renderCurrentPage(); toast('Status atualizado.');
+}
+
+function getEq(id){return equipes.find(e=>e.id==id);}
+
+const STATUS_DI_LABEL={pendente:'Pendente',aprovado:'Aprovado',pago:'Pago',cancelado:'Cancelado'};
+const STATUS_DI_CLS={pendente:'badge-amber',aprovado:'badge-blue',pago:'badge-green',cancelado:'badge-red'};
+
+function renderEquipes(){
+  document.getElementById('equipes-tbody').innerHTML=equipes.map(e=>{
+    const qtd=diarias.filter(d=>d.equipe_id==e.id).length;
+    const total=diarias.filter(d=>d.equipe_id==e.id).reduce((s,d)=>s+(d.total||0),0);
+    return`<tr><td><strong style="font-weight:500;">${e.nome}</strong></td><td style="color:var(--text2);font-size:12px;">${e.descricao||'—'}</td><td><span class="badge ${e.ativa?'badge-green':'badge-red'}"><span class="badge-dot"></span>${e.ativa?'Ativa':'Inativa'}</span></td><td class="mono">${qtd}</td><td class="mono">${fmtBRL(total)}</td><td><button class="btn btn-danger" onclick="delEquipe(${e.id})" style="padding:4px 8px;font-size:11px;">✕</button></td></tr>`;
+  }).join('')||'<tr><td colspan="6" class="empty">Nenhuma equipe cadastrada.</td></tr>';
+}
+
+function renderDiarias(){
+  // populate filter selects
+  const filtEq=document.getElementById('diaria-filtro-equipe');
+  const curEq=filtEq.value;
+  filtEq.innerHTML='<option value="">Todas as equipes</option>'+equipes.map(e=>`<option value="${e.id}" ${e.id==curEq?'selected':''}>${e.nome}</option>`).join('');
+
+  const filtStatus=document.getElementById('diaria-filtro-status').value;
+  let lista=diarias;
+  if(curEq) lista=lista.filter(d=>d.equipe_id==curEq);
+  if(filtStatus) lista=lista.filter(d=>d.status===filtStatus);
+
+  const totalL=lista.reduce((s,d)=>s+(d.total||0),0);
+  const totalD=lista.reduce((s,d)=>s+(d.qtd_dias||0),0);
+  const pend=lista.filter(d=>d.status==='pendente').reduce((s,d)=>s+(d.total||0),0);
+  const pago=lista.filter(d=>d.status==='pago').reduce((s,d)=>s+(d.total||0),0);
+  document.getElementById('diarias-kpis').innerHTML=`
+    <div class="kpi-card kpi-blue"><div class="kpi-label">Total diárias</div><div class="kpi-value">${fmtBRL(totalL)}</div><div class="kpi-delta">${lista.length} registros</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">Dias viajados</div><div class="kpi-value">${totalD.toLocaleString('pt-BR')}</div><div class="kpi-delta">dias</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-label">Pendente</div><div class="kpi-value">${fmtBRL(pend)}</div><div class="kpi-delta">a aprovar/pagar</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">Pago</div><div class="kpi-value">${fmtBRL(pago)}</div><div class="kpi-delta">liquidados</div></div>`;
+
+  document.getElementById('diarias-tbody').innerHTML=lista.map(d=>{
+    const e=getEq(d.equipe_id); const v=getV(d.veiculo_id);
+    const bc=STATUS_DI_CLS[d.status]||'';
+    return`<tr>
+      <td><strong style="font-weight:500;">${d.colaborador}</strong></td>
+      <td>${e?e.nome:'—'}</td>
+      <td style="font-size:12px;color:var(--text2);">${d.destino||'—'}</td>
+      <td class="mono" style="font-size:11px;">${fmtDate(d.data_inicio)} → ${fmtDate(d.data_fim)}</td>
+      <td class="mono">${d.qtd_dias}</td>
+      <td class="mono">${fmtBRL(d.valor_dia||0)}</td>
+      <td class="mono" style="font-weight:600;">${fmtBRL(d.total||0)}</td>
+      <td style="font-size:12px;color:var(--text3);">${v?v.nome:'—'}</td>
+      <td><select class="form-input" style="padding:3px 6px;font-size:11px;width:110px;" onchange="mudaStatusDiaria(${d.id},this.value)">
+        ${['pendente','aprovado','pago','cancelado'].map(s=>`<option value="${s}" ${d.status===s?'selected':''}>${STATUS_DI_LABEL[s]}</option>`).join('')}
+      </select></td>
+      <td><button class="btn btn-danger" onclick="delDiaria(${d.id})" style="padding:4px 8px;font-size:11px;">✕</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="10" class="empty">Nenhuma diária encontrada.</td></tr>';
+}
+
+function renderDashDiarias(){
+  const totalG=diarias.reduce((s,d)=>s+(d.total||0),0);
+  const totalDias=diarias.reduce((s,d)=>s+(d.qtd_dias||0),0);
+  const pendG=diarias.filter(d=>d.status==='pendente').reduce((s,d)=>s+(d.total||0),0);
+  const eqCount=equipes.filter(e=>diarias.some(d=>d.equipe_id===e.id)).length;
+  document.getElementById('dashd-kpis').innerHTML=`
+    <div class="kpi-card kpi-blue"><div class="kpi-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div><div class="kpi-label">Equipes ativas</div><div class="kpi-value">${eqCount}</div><div class="kpi-delta">${equipes.length} cadastradas</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-icon green"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div><div class="kpi-label">Total diárias</div><div class="kpi-value">${fmtBRL(totalG)}</div><div class="kpi-delta">${diarias.length} registros</div></div>
+    <div class="kpi-card kpi-amber"><div class="kpi-icon amber"><svg viewBox="0 0 24 24"><path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"/></svg></div><div class="kpi-label">Dias viajados</div><div class="kpi-value">${totalDias.toLocaleString('pt-BR')}</div><div class="kpi-delta">dias acumulados</div></div>
+    <div class="kpi-card kpi-red"><div class="kpi-icon red"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div><div class="kpi-label">Pendente pagamento</div><div class="kpi-value">${fmtBRL(pendG)}</div><div class="kpi-delta">a liquidar</div></div>`;
+
+  // Chart por equipe
+  const eqData=equipes.map((e,i)=>({
+    nome:e.nome, total:diarias.filter(d=>d.equipe_id===e.id).reduce((s,d)=>s+(d.total||0),0),
+    color:BAR_CLR[i%BAR_CLR.length]
+  })).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
+  const maxE=Math.max(...eqData.map(x=>x.total),1);
+  document.getElementById('dashd-equipe-chart').innerHTML=eqData.map(x=>{
+    const h=Math.round((x.total/maxE)*130)||3;
+    return`<div class="bar-group"><div class="bar-value" style="font-size:9px;">${fmtBRL(x.total).replace('R$\u00a0','')}</div><div class="bar" style="height:${h}px;background:${x.color};opacity:.85;"></div></div>`;
+  }).join('');
+  document.getElementById('dashd-equipe-labels').innerHTML=eqData.map(x=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--text3);">${x.nome.split(' ')[0]}</div>`).join('');
+
+  // Status distribution
+  const statusMap={pendente:0,aprovado:0,pago:0,cancelado:0};
+  diarias.forEach(d=>{ statusMap[d.status]=(statusMap[d.status]||0)+(d.total||0); });
+  const statusColors={pendente:'var(--amber)',aprovado:'var(--accent)',pago:'var(--green)',cancelado:'var(--red)'};
+  document.getElementById('dashd-status-list').innerHTML=Object.entries(statusMap).filter(([,v])=>v>0).map(([k,v])=>`
+    <div class="leg-item"><div class="leg-dot" style="background:${statusColors[k]};border-radius:50%;"></div><div class="leg-label">${STATUS_DI_LABEL[k]||k}</div><div class="leg-val" style="color:${statusColors[k]};">${fmtBRL(v)}</div></div>
+    <div class="progress" style="margin-bottom:8px;"><div class="progress-fill" style="width:${Math.round((v/totalG||0)*100)}%;background:${statusColors[k]};"></div></div>`
+  ).join('')||'<div class="empty">Sem dados.</div>';
+
+  // Ranking equipes
+  const ranking=equipes.map(e=>{
+    const eds=diarias.filter(d=>d.equipe_id===e.id);
+    return{e,total:eds.reduce((s,d)=>s+(d.total||0),0),dias:eds.reduce((s,d)=>s+(d.qtd_dias||0),0),qtd:eds.length};
+  }).filter(x=>x.qtd>0).sort((a,b)=>b.total-a.total);
+  const maxR=ranking[0]?.total||1;
+  document.getElementById('dashd-ranking').innerHTML=ranking.map((x,i)=>{
+    const c=i===0?'var(--green)':i===ranking.length-1?'var(--red)':'var(--accent)';
+    return`<div class="rank-item"><div class="rank-num">${i+1}</div><div class="rank-info"><div class="rank-name">${x.e.nome}</div><div class="rank-plate">${x.qtd} registros · ${x.dias} dias</div></div><div class="rank-bar-wrap"><div class="progress"><div class="progress-fill" style="width:${Math.round((x.total/maxR)*100)}%;background:${c};"></div></div></div><div class="rank-val" style="color:${c};">${fmtBRL(x.total)}</div></div>`;
+  }).join('')||'<div class="empty">Sem dados.</div>';
+
+  // Recentes
+  document.getElementById('dashd-tbody').innerHTML=diarias.slice(0,8).map(d=>{
+    const e=getEq(d.equipe_id); const bc=STATUS_DI_CLS[d.status]||'';
+    return`<tr><td>${d.colaborador}</td><td>${e?e.nome:'—'}</td><td style="font-size:12px;color:var(--text2);">${d.destino||'—'}</td><td class="mono" style="font-size:11px;">${fmtDate(d.data_inicio)} → ${fmtDate(d.data_fim)}</td><td class="mono">${fmtBRL(d.total||0)}</td><td><span class="badge ${bc}"><span class="badge-dot"></span>${STATUS_DI_LABEL[d.status]||d.status}</span></td></tr>`;
+  }).join('')||'<tr><td colspan="6" class="empty">Sem dados.</td></tr>';
+}
+
 function renderDashboard(){
-  document.getElementById('dash-load').style.display='none';
+  const dashLoad=document.getElementById('dash-load');
+  if(dashLoad){ dashLoad.style.display='none'; }
   document.getElementById('dash-main').style.display='block';
   const totalL=abastecimentos.reduce((s,a)=>s+(a.litros||0),0);
   const totalR=abastecimentos.reduce((s,a)=>s+(a.total||0),0);

@@ -110,6 +110,49 @@ class DocumentoVeiculo(db.Model):
             'criado_em': self.criado_em.isoformat()
         }
 
+class Equipe(db.Model):
+    __tablename__ = 'equipes'
+    id        = db.Column(db.Integer, primary_key=True)
+    nome      = db.Column(db.String(100), nullable=False, unique=True)
+    descricao = db.Column(db.String(300))
+    ativa     = db.Column(db.Boolean, default=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id, 'nome': self.nome,
+            'descricao': self.descricao, 'ativa': self.ativa,
+            'criado_em': self.criado_em.isoformat()
+        }
+
+class Diaria(db.Model):
+    __tablename__ = 'diarias'
+    id          = db.Column(db.Integer, primary_key=True)
+    equipe_id   = db.Column(db.Integer, db.ForeignKey('equipes.id'), nullable=False)
+    veiculo_id  = db.Column(db.Integer, db.ForeignKey('veiculos.id'), nullable=True)
+    colaborador = db.Column(db.String(100), nullable=False)
+    data_inicio = db.Column(db.String(20), nullable=False)
+    data_fim    = db.Column(db.String(20), nullable=False)
+    qtd_dias    = db.Column(db.Float, default=1)
+    valor_dia   = db.Column(db.Float, default=0)
+    total       = db.Column(db.Float, default=0)
+    destino     = db.Column(db.String(200))
+    motivo      = db.Column(db.String(300))
+    status      = db.Column(db.String(20), default='pendente')  # pendente | aprovado | pago | cancelado
+    criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id, 'equipe_id': self.equipe_id,
+            'veiculo_id': self.veiculo_id,
+            'colaborador': self.colaborador,
+            'data_inicio': self.data_inicio, 'data_fim': self.data_fim,
+            'qtd_dias': self.qtd_dias, 'valor_dia': self.valor_dia,
+            'total': self.total, 'destino': self.destino,
+            'motivo': self.motivo, 'status': self.status,
+            'criado_em': self.criado_em.isoformat()
+        }
+
 # ── ROUTES ──
 @app.route('/')
 def index():
@@ -273,6 +316,118 @@ def dashboard():
         'total_custo': round(total_r, 2),
         'media_kml': media_g,
         'total_abastecimentos': len(abastecimentos)
+    })
+
+# ── EQUIPES ──
+@app.route('/api/equipes', methods=['GET'])
+def get_equipes():
+    return jsonify([e.to_dict() for e in Equipe.query.order_by(Equipe.nome).all()])
+
+@app.route('/api/equipes', methods=['POST'])
+def add_equipe():
+    d = request.json
+    e = Equipe(
+        nome=d['nome'],
+        descricao=d.get('descricao', ''),
+        ativa=bool(d.get('ativa', True))
+    )
+    db.session.add(e)
+    db.session.commit()
+    return jsonify(e.to_dict()), 201
+
+@app.route('/api/equipes/<int:eid>', methods=['PUT'])
+def update_equipe(eid):
+    e = Equipe.query.get_or_404(eid)
+    d = request.json
+    for field in ['nome', 'descricao', 'ativa']:
+        if field in d:
+            setattr(e, field, d[field])
+    db.session.commit()
+    return jsonify(e.to_dict())
+
+@app.route('/api/equipes/<int:eid>', methods=['DELETE'])
+def delete_equipe(eid):
+    e = Equipe.query.get_or_404(eid)
+    db.session.delete(e)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+# ── DIARIAS ──
+@app.route('/api/diarias', methods=['GET'])
+def get_diarias():
+    equipe_id = request.args.get('equipe_id')
+    q = Diaria.query
+    if equipe_id:
+        q = q.filter_by(equipe_id=int(equipe_id))
+    return jsonify([d.to_dict() for d in q.order_by(Diaria.data_inicio.desc()).all()])
+
+@app.route('/api/diarias', methods=['POST'])
+def add_diaria():
+    d = request.json
+    qtd  = float(d.get('qtd_dias', 1))
+    vdia = float(d.get('valor_dia', 0))
+    total = round(qtd * vdia, 2)
+    di = Diaria(
+        equipe_id=int(d['equipe_id']),
+        veiculo_id=int(d['veiculo_id']) if d.get('veiculo_id') else None,
+        colaborador=d.get('colaborador', ''),
+        data_inicio=d.get('data_inicio', ''),
+        data_fim=d.get('data_fim', ''),
+        qtd_dias=qtd,
+        valor_dia=vdia,
+        total=total,
+        destino=d.get('destino', ''),
+        motivo=d.get('motivo', ''),
+        status=d.get('status', 'pendente')
+    )
+    db.session.add(di)
+    db.session.commit()
+    return jsonify(di.to_dict()), 201
+
+@app.route('/api/diarias/<int:did>', methods=['PUT'])
+def update_diaria(did):
+    di = Diaria.query.get_or_404(did)
+    d = request.json
+    for field in ['equipe_id','veiculo_id','colaborador','data_inicio','data_fim','qtd_dias','valor_dia','destino','motivo','status']:
+        if field in d:
+            setattr(di, field, d[field])
+    di.total = round((di.qtd_dias or 1) * (di.valor_dia or 0), 2)
+    db.session.commit()
+    return jsonify(di.to_dict())
+
+@app.route('/api/diarias/<int:did>', methods=['DELETE'])
+def delete_diaria(did):
+    di = Diaria.query.get_or_404(did)
+    db.session.delete(di)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/api/dashboard/diarias', methods=['GET'])
+def dashboard_diarias():
+    equipes = Equipe.query.all()
+    diarias = Diaria.query.all()
+    total_geral = sum(d.total or 0 for d in diarias)
+    total_dias  = sum(d.qtd_dias or 0 for d in diarias)
+    por_equipe = []
+    for e in equipes:
+        eds = [d for d in diarias if d.equipe_id == e.id]
+        por_equipe.append({
+            'equipe_id': e.id, 'equipe': e.nome,
+            'total': round(sum(d.total or 0 for d in eds), 2),
+            'qtd_dias': sum(d.qtd_dias or 0 for d in eds),
+            'qtd_registros': len(eds)
+        })
+    por_equipe.sort(key=lambda x: x['total'], reverse=True)
+    por_status = {}
+    for d in diarias:
+        por_status[d.status] = por_status.get(d.status, 0) + (d.total or 0)
+    return jsonify({
+        'total_geral': round(total_geral, 2),
+        'total_dias': total_dias,
+        'total_registros': len(diarias),
+        'total_equipes': len(equipes),
+        'por_equipe': por_equipe,
+        'por_status': por_status
     })
 
 with app.app_context():
